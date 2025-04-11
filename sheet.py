@@ -1,16 +1,19 @@
 import os.path
+import os
 from google.auth.transport.requests import Request
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from dotenv import load_dotenv
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 # The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = "1PU1CwTplfNWs4njDR0hTV9rizBMuQK4z0OZ6bON2ceQ"  # Replace with your spreadsheet ID
-SAMPLE_RANGE_NAME = "Sheet1!A1:Q"  # Replace with your desired range
+load_dotenv()  # This loads the variables from .env
 
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+RANGE_NAME = os.getenv("RANGE_NAME")
 
 def main():
     """Shows basic usage of the Sheets API.
@@ -43,15 +46,14 @@ def append_values( values):
             service.spreadsheets()
             .values()
             .append(
-                spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                range=SAMPLE_RANGE_NAME,
+                spreadsheetId=SPREADSHEET_ID,
+                range=RANGE_NAME,
                 valueInputOption="USER_ENTERED",
                 body=body,
             )
             .execute()
         )
 
-        print(f"{result.get('updates').get('updatedCells')} cells appended.")
         return result
     except HttpError as error:
         print(f"An error occurred: {error}")

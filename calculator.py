@@ -86,7 +86,6 @@ def calculate_client_score(user_data):
     # /////////// age//////////////
     birthday = user_data.get(AllowedKeys.birth_date.value) or datetime.now()
     client_age = calculate_age(birthday)
-    print(f"user data ={user_data}\n")
     if 18 <= client_age < 25:
         final_score += 25
     elif 25 <= client_age < 33:
@@ -95,7 +94,6 @@ def calculate_client_score(user_data):
         final_score += 25
     elif 40 <= client_age < 45:
         final_score += 15
-    print(f"final scroe = {final_score}\n")
     # ///////////// marital ////////////////////////
     if user_data.get(AllowedKeys.marital_status.value) == ClientMarital.Single:
         final_score += 10
