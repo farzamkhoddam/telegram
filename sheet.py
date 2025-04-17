@@ -1,48 +1,24 @@
 import os.path
 import os
-from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.cloud import secretmanager
-from google.auth.transport.requests import Request
-import json
+from dotenv import load_dotenv
 
-# Create a Secret Manager client
-client = secretmanager.SecretManagerServiceClient()
+# The ID and range of a sample spreadsheet.
+load_dotenv()  # This loads the variables from .env
 
-SPREADSHEET_ID = "SPREADSHEET_ID"
-RANGE_NAME = "RANGE_NAME"
-CREDENTIALS = "credentials"
-project_id = "70217429413" # You'll need to put your project ID here
-SPREADSHEET_ID_SECRET_NAME = f"projects/{project_id}/secrets/{SPREADSHEET_ID}/versions/latest"
-RANGE_NAME_SECRET_NAME = f"projects/{project_id}/secrets/{RANGE_NAME}/versions/latest"
-CREDENTIALS_SECRET_NAME = f"projects/{project_id}/secrets/{CREDENTIALS}/versions/latest"
-
-
-try:
-    # Get the latest version of the secret
-    response = client.access_secret_version(name=SPREADSHEET_ID_SECRET_NAME)
-
-    # The secret data is in the 'payload'
-    spreadsheet_id = response.payload.data.decode("utf-8")
-    # Now you can use the api_key in your program!
-    print(f"Your spreadsheet_id is: {spreadsheet_id}")
-
-except Exception as e:
-    print(f"Something went wrong: {e}")
-try:
-    # Get the latest version of the secret
-    response = client.access_secret_version(name=SPREADSHEET_ID_SECRET_NAME)
-
-    # The secret data is in the 'payload'
-    range_name = response.payload.data.decode("utf-8")
-    # Now you can use the api_key in your program!
-    print(f"Your range_name is: {range_name}")
-
-except Exception as e:
-    print(f"Something went wrong: {e}")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+RANGE_NAME = os.getenv("RANGE_NAME")
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+# The ID and range of a sample spreadsheet.
+load_dotenv()  # This loads the variables from .env
+
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+RANGE_NAME = os.getenv("RANGE_NAME")
 
 
 def main():
@@ -56,27 +32,18 @@ def main():
     # If there are no (valid) credentials available, let the user log in.
 
 
-
-try:
-    response = client.access_secret_version(name=CREDENTIALS_SECRET_NAME)
-    credentials_json = response.payload.data.decode("utf-8")
-    credentials_info = json.loads(credentials_json)
-    creds = service_account.Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
-    print(f"your credentials ={creds}")
-    
-except Exception as e:
-    print(f"An error occurred while accessing the secret: {e}")
-    
-
 def append_values(values):
-    """Appends values to a sample spreadsheet using credentials from Secret Manager."""
-
+    """Appends values to a sample spreadsheet."""
+    creds = None
+    if os.path.exists("credentials.json"):
+        creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # You might need to import Request from google.auth.transport.requests
+            creds.refresh(Request())
         else:
-            print("Error: Could not retrieve valid credentials from Secret Manager.")
-            return None
+            creds = Credentials.from_service_account_file(
+                "credentials.json", scopes=SCOPES
+            )
 
     try:
         service = build("sheets", "v4", credentials=creds)
@@ -85,17 +52,19 @@ def append_values(values):
             service.spreadsheets()
             .values()
             .append(
-                spreadsheetId=spreadsheet_id,
-                range=range_name,
+                spreadsheetId=SPREADSHEET_ID,
+                range=RANGE_NAME,
                 valueInputOption="USER_ENTERED",
                 body=body,
             )
             .execute()
         )
+
         return result
     except HttpError as error:
         print(f"An error occurred: {error}")
         return error
+
 
 def main():
     values = [

@@ -27,29 +27,11 @@ from calculator import (
     AllowedKeys,
     calculate_client_score,
 )
-from google.cloud import secretmanager
 
-# Create a Secret Manager client
-client = secretmanager.SecretManagerServiceClient()
+load_dotenv()  # This loads the variables from .env
 
-TELEGRAM_TOKEN = "TELEGRAM_TOKEN"
-
-project_id = "70217429413" # You'll need to put your project ID here
-TELEGRAM_TOKEN_SECRET_NAME = f"projects/{project_id}/secrets/{TELEGRAM_TOKEN}/versions/latest"
-
-try:
-    # Get the latest version of the secret
-    response = client.access_secret_version(name=TELEGRAM_TOKEN_SECRET_NAME)
-
-    # The secret data is in the 'payload'
-    token = response.payload.data.decode("utf-8")
-
-    # Now you can use the api_key in your program!
-    print(f"Your API key is: {token}")
-
-except Exception as e:
-    print(f"Something went wrong: {e}")
-
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+BOT_USERNAME = os.getenv("BOT_USERNAME")
 (
     BIRTH_DATE,
     MARITAL_STATUS,
@@ -668,7 +650,7 @@ async def handle_responses(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    app = ApplicationBuilder().token(token).build()
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("survey", survey)],
